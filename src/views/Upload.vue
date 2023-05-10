@@ -22,6 +22,7 @@
 </template>
 <script setup>
 import { ref } from 'vue'
+import $store from '@/store'
 
 const pdfSrc = ref('')
 const emit = defineEmits(['uploadSuccess', 'fileChange'])
@@ -52,6 +53,7 @@ const handleFileChange = uploadFile => {
 }
 
 const handleSuccess = res => {
+  $store.commit('reset_file_id', res.data.id)
   emit('uploadSuccess', res.data.id)
 }
 </script>

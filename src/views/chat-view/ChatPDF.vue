@@ -20,6 +20,7 @@ import { ref, onMounted, nextTick, watch } from 'vue'
 import { fetchTalk } from '@/api/baseApi'
 import { showLastMessage } from '@/libs/utils/utils.js'
 import Loading from '@/assets/loading.svg?component'
+import $store from '@/store'
 
 const props = defineProps({
   active: {
@@ -61,8 +62,10 @@ async function translateText() {
   })
   showLastMessage()
   msgLoading.value = true
+
+  console.log($store, '---- $store.state.file_id ')
   try {
-    const res = await fetchTalk({ content: input.value, file_id: props.fileId })
+    const res = await fetchTalk({ content: input.value, file_id: $store.state.active_file_id })
     messages.value.push({
       content: res.data.content || '',
       role: 'chatdoc',
@@ -72,7 +75,7 @@ async function translateText() {
     input.value = ''
   } catch (error) {
     messages.value.push({
-      content: 'has a error',
+      content: error.msg,
       role: 'chatdoc',
     })
     msgLoading.value = false
