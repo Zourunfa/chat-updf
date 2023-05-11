@@ -10,47 +10,20 @@
         <Loading />
       </el-icon>
     </div>
-    <!-- :disabled="!active || msgLoading" -->
-    <el-input
-      :disabled="!active || msgLoading"
-      v-loading="$store.state.inputLoading"
-      ref="refInput"
-      class="input"
-      :placeholder="!active ? '需要先上传文档才可于文档对话...' : '开始与你的文档对话吧'"
-      v-model="input"
-      @keyup.up.enter="talkToAI"
-    />
+    <!--   :disabled="active?.state != 2 || msgLoading" -->
+    <input ref="refInput" class="input" :placeholder="active?.state != 2 ? '索引构建中...' : '开始与你的文档对话吧'" v-model="input" @keyup.up.enter="askSummary" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
-import { fetchTalk } from '@/api/baseApi'
+import { ref, onMounted, nextTick } from 'vue'
+import { fetchSummarize } from '@/api/baseApi'
 import { showLastMessage } from '@/libs/utils/utils.js'
 import Loading from '@/assets/loading.svg?component'
-import $store from '@/store'
-
-const inputLoading = ref(false)
-const props = defineProps({
-  active: {
-    type: String,
-    default: '',
-  },
-  fileId: {
-    type: String,
-  },
-})
-
-watch(
-  () => $store.state.inputLoading,
-  () => {
-    alert($store.state.inputLoading)
-    console.log($store.state.inputLoading, '----active')
-  }
-)
-
 const messages = ref([])
 const input = ref('')
+
+console.log(Loading, '---loading')
 
 const refInput = ref(null)
 const getFocus = () => {
@@ -63,25 +36,21 @@ onMounted(() => {
 })
 
 const msgLoading = ref(false)
-async function talkToAI() {
+async function askSummary() {
   messages.value.push({
     content: input.value,
     role: 'user',
   })
   showLastMessage()
   msgLoading.value = true
-  inputLoading.value = true
-
-  alert(inputLoading.value)
   try {
-    const res = await fetchTalk({ content: input.value, file_id_str: $store.state.active_file_id })
+    const res = await fetchSummarize({ content: input.value })
     messages.value.push({
       content: res.data.content || '',
       role: 'chatdoc',
     })
     showLastMessage()
     msgLoading.value = false
-    inputLoading.value = false
     input.value = ''
   } catch (error) {
     messages.value.push({
@@ -89,7 +58,6 @@ async function talkToAI() {
       role: 'chatdoc',
     })
     msgLoading.value = false
-    inputLoading.value = false
     input.value = ''
   }
 }
@@ -148,12 +116,12 @@ async function talkToAI() {
     align-items: center;
     justify-content: center;
   }
-  :deep(.el-input) {
+  .input {
     // width: 88%;
     margin: 10px;
     margin-right: 20px;
     padding: 10px;
-    // height: 30px;
+    height: 30px;
     line-height: 30px;
     border: 1px solid blue;
     background-image: url('@/assets/send.svg');
@@ -162,7 +130,7 @@ async function talkToAI() {
     padding-left: 40px;
     position: fixed;
     bottom: 0;
-    width: 28%;
+    width: 26%;
   }
 }
 </style>

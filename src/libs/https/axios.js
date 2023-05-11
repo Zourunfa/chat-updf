@@ -1,8 +1,17 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-
+import JSONBIG from 'json-bigint'
 // 显示中的错误提示: {'Please login first': true}
 // 防止错误信息的重复显示，同一个错误信息显示2500ms后自动清除
+
+axios.defaults.transformResponse = [
+  function (data) {
+    const res = JSONBIG.parse(data)
+    console.log(res, '---big')
+    return res
+  },
+]
+
 const errMsgData = {}
 class HttpRequest {
   constructor() {
@@ -60,10 +69,6 @@ class HttpRequest {
   request(options) {
     const instance = axios.create()
 
-    if (options.headers) {
-      config.headers = Object.assign({}, options.headers)
-      delete options.headers
-    }
     options = Object.assign({}, options)
     this.interceptors(instance, options.url)
     return instance(options)

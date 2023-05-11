@@ -9,6 +9,7 @@
     :show-file-list="false"
     :on-change="handleFileChange"
     :on-success="handleSuccess"
+    :http-request="uploadFile"
     :before-upload="beforeUpload"
   >
     <!-- <template #trigger>
@@ -23,7 +24,9 @@
 <script setup>
 import { ref } from 'vue'
 import $store from '@/store'
+import axios from 'axios'
 
+import bigInt from 'big-integer'
 const pdfSrc = ref('')
 const emit = defineEmits(['uploadSuccess', 'fileChange'])
 const supportFileType = ['application/pdf']
@@ -39,6 +42,29 @@ const beforeUpload = rawFile => {
   return true
 }
 
+async function uploadFile(file) {
+  console.log(file, '---file.row')
+  console.log(file.file, '---file.row')
+  const formData = new FormData()
+  $store.commit('reset_loading',true)
+  formData.append('file', new Blob([file.file]), file.name)
+  return axios
+    .post('/api/v1/file/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    .then(response => {
+      const result = response.data
+      $store.commit('reset_loading',false)
+      return result
+      // 处理上传成功的结果
+    })
+    .catch(error => {
+      // 处理上传失败的结果
+      return error
+    })
+}
 const handlePreview = uploadFile => {
   console.log(uploadFile, '---file')
 }
@@ -53,7 +79,6 @@ const handleFileChange = uploadFile => {
 }
 
 const handleSuccess = res => {
-  $store.commit('reset_file_id', res.data.id)
-  emit('uploadSuccess', res.data.id)
+  if (res && res.data && res.data.id) $store.commit('reset_file_id', bigInt(res.data.id.toString()))
 }
 </script>

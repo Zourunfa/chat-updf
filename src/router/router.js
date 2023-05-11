@@ -12,6 +12,11 @@ const routes = [
     name: 'translate',
     component: () => import('@/views/chat-view/ChatTranslate.vue'),
   },
+  {
+    path: '/sumarize',
+    name: 'sumarize',
+    component: () => import('@/views/chat-view/ChatSumary.vue'),
+  },
 ]
 
 const router = createRouter({

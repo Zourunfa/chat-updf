@@ -5,20 +5,20 @@
       <template #title>Chat with PDF</template>
     </el-menu-item>
     <el-menu-item index="translate" route="/translate">
-      <el-icon><icon-menu /></el-icon>
+      <el-icon><IconMen /></el-icon>
       <template #title>Translate</template>
     </el-menu-item>
 
-    <!-- <el-menu-item route="/translate">
+    <el-menu-item index="sumarize" route="/sumarize">
       <el-icon><setting /></el-icon>
       <template #title>summarize</template>
-    </el-menu-item> -->
+    </el-menu-item>
   </el-menu>
 </template>
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { Document, Menu as IconMenu } from '@element-plus/icons-vue'
+import { Document, Menu as IconMen, Setting } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 
 const $route = useRoute()
