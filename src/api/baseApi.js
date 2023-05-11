@@ -2,8 +2,10 @@ import Http from '@/libs/https/request'
 
 export const fetchTalkList = data => {
   // 创建企业
-  let url = '/api/v1/chat/list'
-
+  let url = '/api/v1/chat/list?'
+  for (let key in data) {
+    url = url + key + '=' + data[key]
+  }
   return Http.request({
     url,
     data,

@@ -11,47 +11,11 @@ const docList = ref([])
 const active = ref(null)
 const file_id = ref('')
 const uploadSuccess = file_id => {
-  alert(file_id)
   file_id.value = file_id
 }
 // 该文档中李志有多少个女朋友
 const fileChange = url => {
   active.value = url
-}
-
-function query() {
-  if (!input.value) {
-    return
-  }
-  messages.value.push({
-    content: input.value,
-    role: 'user',
-  })
-  showLastMessage()
-  msgLoading.value = true
-  fetchQuery(active.value.doc_id, input.value).then(res => {
-    messages.value.push({
-      content: res?.data?.response || '',
-      role: 'chatdoc',
-    })
-    showLastMessage()
-    msgLoading.value = false
-  })
-  input.value = ''
-}
-
-function delDoc(doc_id) {
-  if (active.value.doc_id == doc_id) {
-    active.value = null
-  }
-  if (active.value == null && docList.value.length > 0) {
-    const doc = docList.value[0]
-    active.value = doc
-  }
-
-  fetchDelDoc(doc_id).then(() => {
-    loadDos()
-  })
 }
 
 const loadFileState = () => {
