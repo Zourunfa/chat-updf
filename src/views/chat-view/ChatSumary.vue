@@ -16,14 +16,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
-import { fetchSummarize } from '@/api/baseApi'
+import { ref, onMounted, nextTick, onBeforeMount } from 'vue'
+import { fetchSummarize, fetchTalkList } from '@/api/baseApi'
 import { showLastMessage } from '@/libs/utils/utils.js'
 import Loading from '@/assets/loading.svg?component'
 const messages = ref([])
 const input = ref('')
-
-console.log(Loading, '---loading')
+const talkList = ref([])
 
 const refInput = ref(null)
 const getFocus = () => {
@@ -35,6 +34,33 @@ onMounted(() => {
   getFocus()
 })
 
+onBeforeMount(async () => {
+  if (localStorage.getItem('summary_chat_id')) {
+    const res = await fetchTalkList({ chat_id: localStorage.getItem('summary_chat_id') })
+    talkList.value = res.data.list
+    initTalkList()
+  }
+})
+
+const initTalkList = () => {
+  if (talkList.value.length > 0) {
+    talkList.value.forEach((talkContent, index) => {
+      console.log(talkContent, '---talkContent')
+      if (index % 2 == 1) {
+        messages.value.push({
+          content: talkContent.content || '',
+          role: 'chatdoc',
+        })
+      } else {
+        messages.value.push({
+          content: talkContent.content || '',
+          role: 'user',
+        })
+      }
+    })
+  }
+}
+
 const msgLoading = ref(false)
 async function askSummary() {
   messages.value.push({
@@ -44,11 +70,13 @@ async function askSummary() {
   showLastMessage()
   msgLoading.value = true
   try {
-    const res = await fetchSummarize({ content: input.value })
+    const res = await fetchSummarize({ content: input.value, chat_id_str: localStorage.getItem('summary_chat_id') })
     messages.value.push({
       content: res.data.content || '',
       role: 'chatdoc',
     })
+
+    localStorage.setItem('summary_chat_id', res.data.chat_id)
     showLastMessage()
     msgLoading.value = false
     input.value = ''
@@ -79,7 +107,7 @@ async function askSummary() {
 
 .chat-translate {
   width: 100%;
-  // height: 100%;
+  height: 100%;
   flex-direction: column;
   justify-content: space-between;
   display: flex;
@@ -89,9 +117,10 @@ async function askSummary() {
     display: flex;
     flex-direction: column;
     padding: 10px;
-    // height: 90%;
-    // overflow-y: scroll;
-    ::-webkit-scrollbar {
+    height: 92%;
+    overflow-y: scroll;
+
+    &::-webkit-scrollbar {
       display: none;
     }
     .message-item {

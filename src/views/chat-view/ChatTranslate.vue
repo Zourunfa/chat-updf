@@ -16,17 +16,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, onBeforeMount, watch } from 'vue'
+import { ref, onMounted, nextTick, onBeforeMount } from 'vue'
 import { fetchTranslate, fetchTalkList } from '@/api/baseApi'
 import { showLastMessage } from '@/libs/utils/utils.js'
-import { DeleteFilled } from '@element-plus/icons-vue'
+
 import Loading from '@/assets/loading.svg?component'
 
 const messages = ref([])
 const input = ref('')
 const talkList = ref([])
-
-console.log(Loading, '---loading')
 
 const refInput = ref(null)
 const getFocus = () => {
