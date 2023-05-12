@@ -4,7 +4,7 @@ export const fetchTalkList = data => {
   // 创建企业
   let url = '/api/v1/chat/list?'
   for (let key in data) {
-    url = url + key + '=' + data[key]
+    url = url + key + '=' + data[key] + '&'
   }
   return Http.request({
     url,

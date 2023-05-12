@@ -11,9 +11,10 @@
       </el-icon>
     </div>
     <!-- :disabled="!active || msgLoading" -->
+
     <el-input
-      :disabled="!active || msgLoading"
-      v-loading="$store.state.inputLoading"
+      :disabled="isInputDisabled"
+      v-loading="msgLoading || isInputLoading"
       ref="refInput"
       class="input"
       :placeholder="!active ? '需要先上传文档才可于文档对话...' : '开始与你的文档对话吧'"
@@ -24,8 +25,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
-import { fetchTalk } from '@/api/baseApi'
+import { ref, onMounted, computed, nextTick, watch, onBeforeMount } from 'vue'
+import { fetchTalk, fetchTalkList } from '@/api/baseApi'
 import { showLastMessage } from '@/libs/utils/utils.js'
 import Loading from '@/assets/loading.svg?component'
 import $store from '@/store'
@@ -39,15 +40,26 @@ const props = defineProps({
   fileId: {
     type: String,
   },
+  isInputLoading: {
+    type: Boolean,
+  },
 })
 
+const talkList = ref([])
 watch(
-  () => $store.state.inputLoading,
+  () => props.isInputLoading,
   () => {
-    alert($store.state.inputLoading)
-    console.log($store.state.inputLoading, '----active')
+    console.log(props.isInputLoading, '----active')
   }
 )
+
+const isInputDisabled = computed(() => {
+  if (localStorage.getItem('file_id')) {
+    return false
+  }
+
+  return !props.active || msgLoading.value
+})
 
 const messages = ref([])
 const input = ref('')
@@ -58,6 +70,34 @@ const getFocus = () => {
     refInput.value.focus()
   })
 }
+
+onBeforeMount(async () => {
+  if (localStorage.getItem('file_id')) {
+    const res = await fetchTalkList({ chat_id_str: localStorage.getItem('chat_id'), file_id_str: localStorage.getItem('file_id') })
+    talkList.value = res.data.list
+    initTalkList()
+  }
+})
+
+const initTalkList = () => {
+  if (talkList.value && talkList.value.length > 0) {
+    talkList.value.forEach((talkContent, index) => {
+      console.log(talkContent, '---talkContent')
+      if (index % 2 == 1) {
+        messages.value.push({
+          content: talkContent.content || '',
+          role: 'chatdoc',
+        })
+      } else {
+        messages.value.push({
+          content: talkContent.content || '',
+          role: 'user',
+        })
+      }
+    })
+  }
+}
+
 onMounted(() => {
   getFocus()
 })
@@ -72,14 +112,33 @@ async function talkToAI() {
   msgLoading.value = true
   inputLoading.value = true
 
-  alert(inputLoading.value)
+  let formData
+
+  if (localStorage.getItem('chat_id')) {
+    formData = {
+      content: input.value,
+      chat_id_str: localStorage.getItem('chat_id'),
+      file_id_str: localStorage.getItem('file_id') ? localStorage.getItem('file_id') : $store.state.active_file_id,
+    }
+  } else {
+    formData = {
+      content: input.value,
+      file_id_str: localStorage.getItem('file_id') ? localStorage.getItem('file_id') : $store.state.active_file_id,
+    }
+  }
+
   try {
-    const res = await fetchTalk({ content: input.value, file_id_str: $store.state.active_file_id })
+    const res = await fetchTalk(formData)
+
     messages.value.push({
       content: res.data.content || '',
       role: 'chatdoc',
     })
     showLastMessage()
+
+    if (!localStorage.getItem('chat_id')) {
+      localStorage.setItem('chat_id', res.data.chat_id)
+    }
     msgLoading.value = false
     inputLoading.value = false
     input.value = ''

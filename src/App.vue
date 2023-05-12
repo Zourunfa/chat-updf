@@ -1,44 +1,10 @@
-<script setup>
-import { ref } from 'vue'
-import { fetchQuery, fetchDelDoc } from './api'
-
-import Upload from './views/Upload.vue'
-
-import SiderMenu from '@/views/SideMenu.vue'
-import { docState, formatByteSize, docType, nameWithoutExt, docUrl, showLastMessage } from './utils'
-
-const docList = ref([])
-const active = ref(null)
-const file_id = ref('')
-const uploadSuccess = file_id => {
-  file_id.value = file_id
-}
-// 该文档中李志有多少个女朋友
-const fileChange = url => {
-  active.value = url
-}
-
-const loadFileState = () => {
-  if (docList.value.filter(e => e.state != 2).length > 0) {
-    setTimeout(() => {
-      loadDos()
-      loadFileState()
-    }, 2000)
-  }
-}
-
-const onerror = e => {
-  console.log(e)
-}
-</script>
-
 <template>
   <div class="container">
     <div class="sidebar">
       <div class="sider-menu">
         <SiderMenu />
       </div>
-
+      <Upload @reset-loading="onResetLoading" @file-change="fileChange" style="width: 100%; height: 100%" />
       <div class="user-info">
         <el-avatar :size="50" src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png" />
         <span class="user-name">Anonymous</span>
@@ -47,21 +13,51 @@ const onerror = e => {
 
     <div class="chat">
       <router-view v-slot="{ Component }" :key="key">
-        <component :is="Component" :fileId="file_id" :active="active" :key="key" />
+        <component :is="Component" :isInputLoading="isInputLoading" :fileId="file_id" :active="active" :key="key" />
       </router-view>
     </div>
     <div class="doc">
       <div v-if="!active" class="empty-info">
         <div>当前没有文档, 请先上传</div>
         <div>
-          <Upload @upload-success="uploadSuccess" @file-change="fileChange" style="width: 100%; height: 100%" />
+          <Upload @reset-loading="onResetLoading" @file-change="fileChange" style="width: 100%; height: 100%" />
         </div>
       </div>
-      <iframe v-if="active" :src="active" style="width: 100%; height: 100%" :key="active.doc_id" @onerror="onerror"></iframe>
+      <iframe v-if="active" :src="active" style="width: 100%; height: 100%" @onerror="onerror"></iframe>
     </div>
   </div>
 </template>
+<script setup>
+import { ref, onBeforeMount } from 'vue'
+import Upload from './views/Upload.vue'
+import SiderMenu from '@/views/SideMenu.vue'
 
+const docList = ref([])
+const active = ref(null)
+const file_id = ref('')
+const isInputLoading = ref(false)
+
+const fileChange = url => {
+  console.log(typeof url)
+  console.log(url, '--active')
+  active.value = url
+  console.log(active.value.doc_id, '---  active.value.doc_id')
+  localStorage.setItem('activeUrl', url)
+}
+onBeforeMount(() => {
+  if (localStorage.getItem('activeUrl')) {
+    active.value = localStorage.getItem('activeUrl')
+  }
+})
+
+const onResetLoading = value => {
+  isInputLoading.value = value
+}
+
+const onerror = e => {
+  console.log(e)
+}
+</script>
 <style lang="scss" scoped>
 .ellipsis {
   width: 300px;

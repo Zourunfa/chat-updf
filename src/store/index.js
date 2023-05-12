@@ -11,6 +11,7 @@ const store = createStore({
       state.active_file_id = file_id
     },
     reset_loading(state, isLoading) {
+  
       state.isLoading = isLoading
     },
   },

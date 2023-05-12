@@ -11,7 +11,7 @@
       </el-icon>
     </div>
     <!--   :disabled="active?.state != 2 || msgLoading" -->
-    <input ref="refInput" class="input" :placeholder="active?.state != 2 ? '索引构建中...' : '开始与你的文档对话吧'" v-model="input" @keyup.up.enter="askSummary" />
+    <input v-loading="msgLoading" ref="refInput" class="input" :placeholder="active?.state != 2 ? '索引构建中...' : '开始与你的文档对话吧'" v-model="input" @keyup.up.enter="askSummary" />
   </div>
 </template>
 

@@ -9,9 +9,10 @@
     :show-file-list="false"
     :on-change="handleFileChange"
     :on-success="handleSuccess"
-    :http-request="uploadFile"
     :before-upload="beforeUpload"
+    :http-request="uploadFile"
   >
+    <!--  :http-request="uploadFile" -->
     <!-- <template #trigger>
       <el-button type="primary" style="width: 100%">文件</el-button>
     </template> -->
@@ -28,14 +29,14 @@ import axios from 'axios'
 
 import bigInt from 'big-integer'
 const pdfSrc = ref('')
-const emit = defineEmits(['uploadSuccess', 'fileChange'])
+const emit = defineEmits(['uploadSuccess', 'fileChange', 'resetLoading'])
 const supportFileType = ['application/pdf']
 const beforeUpload = rawFile => {
   if (!supportFileType.includes(rawFile.type)) {
     console.log(rawFile.type)
     ElMessage.error('仅支持 .pdf 类型文件')
     return false
-  } else if (rawFile.size / 1024 / 1024 > 2) {
+  } else if (rawFile.size / 1024 / 1024 > 10) {
     ElMessage.error('文件大小不能超过 2MB!')
     return false
   }
@@ -43,11 +44,13 @@ const beforeUpload = rawFile => {
 }
 
 async function uploadFile(file) {
-  console.log(file, '---file.row')
-  console.log(file.file, '---file.row')
+  localStorage.setItem('chat_id', '')
+  localStorage.setItem('file_id', '')
+  $store.commit('reset_loading', true)
+  emit('resetLoading', true)
   const formData = new FormData()
-  $store.commit('reset_loading',true)
-  formData.append('file', new Blob([file.file]), file.name)
+
+  formData.append('file', file.file, file.name)
   return axios
     .post('/api/v1/file/upload', formData, {
       headers: {
@@ -56,12 +59,15 @@ async function uploadFile(file) {
     })
     .then(response => {
       const result = response.data
-      $store.commit('reset_loading',false)
+      $store.commit('reset_loading', false)
+      emit('resetLoading', false)
+
       return result
       // 处理上传成功的结果
     })
     .catch(error => {
       // 处理上传失败的结果
+      emit('resetLoading', false)
       return error
     })
 }
@@ -79,6 +85,8 @@ const handleFileChange = uploadFile => {
 }
 
 const handleSuccess = res => {
-  if (res && res.data && res.data.id) $store.commit('reset_file_id', bigInt(res.data.id.toString()))
+  localStorage.setItem('file_id', res.data.id.toString())
+
+  if (res && res.data && res.data.id) $store.commit('reset_file_id', res.data.id.toString())
 }
 </script>
